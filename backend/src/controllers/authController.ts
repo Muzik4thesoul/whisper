@@ -38,19 +38,24 @@ export async function authCallback(
     }
 
     let user = await User.findOne({ clerkId });
-
     if (!user) {
-      // get user info from clerk and save to db
       const clerkUser = await clerkClient.users.getUser(clerkId);
-
-      user = await User.create({
-        clerkId,
-        name: clerkUser.firstName
-          ? `${clerkUser.firstName} ${clerkUser.lastName || ""}`.trim()
-          : clerkUser.emailAddresses[0]?.emailAddress.split("@")[0],
-        email: clerkUser.emailAddresses[0]?.emailAddress,
-        avatar: clerkUser.imageUrl,
-      });
+      const primaryEmail = clerkUser.emailAddresses[0]?.emailAddress;
+      const displayName = clerkUser.firstName?.trim()
+        ? `${clerkUser.firstName} ${clerkUser.lastName || ""}`.trim()
+        : primaryEmail?.split("@")[0];
+      user = await User.findOneAndUpdate(
+        { clerkId },
+        {
+          $setOnInsert: {
+            clerkId,
+            name: displayName,
+            email: primaryEmail,
+            avatar: clerkUser.imageUrl,
+          },
+        },
+        { new: true, upsert: true },
+      );
     }
 
     res.json(user);
