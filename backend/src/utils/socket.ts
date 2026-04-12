@@ -59,7 +59,7 @@ export const initializeSocket = (httpServer: httpServer) => {
 
     socket.join(`user:${userId}`);
 
-    +socket.on("join-chat", async (chatId: string) => {
+    socket.on("join-chat", async (chatId: string) => {
       try {
         const chat = await Chat.exists({ _id: chatId, participants: userId });
         if (!chat) {
