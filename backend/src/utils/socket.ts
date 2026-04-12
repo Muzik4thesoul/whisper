@@ -8,8 +8,8 @@ import { User } from "../models/User";
 interface SocketWithUserId extends Socket {
   userId: string;
 }
-// store online uses in memory : userId -> socketId
-export const onlineUsers: Map<string, string> = new Map();
+// store online users in memory: userId -> active socketIds
+export const onlineUsers: Map<string, Set<string>> = new Map();
 
 export const initializeSocket = (httpServer: httpServer) => {
   const allowedOrigins = [
@@ -50,15 +50,26 @@ export const initializeSocket = (httpServer: httpServer) => {
     socket.emit("online-users", { userIds: Array.from(onlineUsers.keys()) });
 
     // store user in the onlineUsers map
-    onlineUsers.set(userId, socket.id);
+    const sockets = onlineUsers.get(userId) ?? new Set<string>();
+    sockets.add(socket.id);
+    onlineUsers.set(userId, sockets);
 
     // notify others that this current user is online
     socket.broadcast.emit("user-online", { userId });
 
     socket.join(`user:${userId}`);
 
-    socket.on("join-chat", (chatId: string) => {
-      socket.join(`chat:${chatId}`);
+    +socket.on("join-chat", async (chatId: string) => {
+      try {
+        const chat = await Chat.exists({ _id: chatId, participants: userId });
+        if (!chat) {
+          socket.emit("socket-error", { message: "Chat not found" });
+          return;
+        }
+        socket.join(`chat:${chatId}`);
+      } catch {
+        socket.emit("socket-error", { message: "Failed to join chat" });
+      }
     });
 
     socket.on("leave-chat", (chatId: string) => {
@@ -112,7 +123,15 @@ export const initializeSocket = (httpServer: httpServer) => {
       onlineUsers.delete(userId);
 
       // notify others
-      socket.broadcast.emit("user-offline", { userId });
+      const sockets = onlineUsers.get(userId);
+      if (!sockets) return;
+      sockets.delete(socket.id);
+      if (sockets.size === 0) {
+        onlineUsers.delete(userId);
+        socket.broadcast.emit("user-offline", { userId });
+      } else {
+        onlineUsers.set(userId, sockets);
+      }
     });
   });
 
