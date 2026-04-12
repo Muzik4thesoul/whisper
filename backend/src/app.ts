@@ -1,5 +1,8 @@
 import express from "express";
-import { clerkMiddleware, requireAuth } from "@clerk/express";
+import path from "path";
+
+import { clerkMiddleware } from "@clerk/express";
+
 import authRoutes from "./routes/authRoutes";
 import chatRoutes from "./routes/chatRoutes";
 import messageRoutes from "./routes/messageRoutes";
@@ -24,4 +27,13 @@ app.use("/api/users", userRoutes);
 
 // error handlers should be added after all routes and other middleware so they catch error passed with next(err) or thrown in async route handlers.
 app.use(errorhandler);
+
+// serve frontend in production
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../../web/dist")));
+  app.get("/{*any}", (_, res) => {
+    res.sendFile(path.join(__dirname, "../../web/dist/index.html"));
+  });
+}
+
 export default app;
