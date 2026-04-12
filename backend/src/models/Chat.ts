@@ -4,7 +4,7 @@ export interface IChat extends Document {
   participants: mongoose.Types.ObjectId[];
   lastMessage?: mongoose.Types.ObjectId;
   lastMessageAt?: Date;
-  ceratedAt: Date;
+  createdAt: Date;
   updatedAt: Date;
 }
 
