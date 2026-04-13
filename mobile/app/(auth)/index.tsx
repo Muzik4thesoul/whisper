@@ -1,11 +1,19 @@
 import { Image } from "expo-image";
-import { View, Text, Dimensions, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  Dimensions,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import useAuthSoical from "../../hooks/useSocialAuth";
 
 const { width, height } = Dimensions.get("window");
 
 const AuthScreen = () => {
+  const { handleSocialAuth, loadingStrategy } = useAuthSoical();
   return (
     <View className="flex-1 bg-surface-dark">
       {/* animated orbs */}
@@ -46,28 +54,41 @@ const AuthScreen = () => {
             {/* Google Btn */}
             <Pressable
               className="flex-1 flex-row justify-center items-center gap-2 bg-white/95 py-4 rounded-2xl active:scale-[0.97]"
-              disabled={false}
-              onPress={() => console.log("👍you press google btn")}
+              disabled={loadingStrategy === "oauth_google"}
+              onPress={() => handleSocialAuth("oauth_google")}
             >
-              <Image
-                source={require("../../assets/images/google.png")}
-                style={{ width: 20, height: 20 }}
-                contentFit="contain"
-              />
-              <Text className="text-gray-900 font-semibold text-sm">
-                Google
-              </Text>
+              {loadingStrategy === "oauth_google" ? (
+                <ActivityIndicator size="small" color="#1a1a1a" />
+              ) : (
+                <>
+                  <Image
+                    source={require("../../assets/images/google.png")}
+                    style={{ width: 20, height: 20 }}
+                    contentFit="contain"
+                  />
+                  <Text className="text-gray-900 font-semibold text-sm">
+                    Google
+                  </Text>
+                </>
+              )}
             </Pressable>
+
             {/* Apple Btn */}
             <Pressable
               className="flex-1 flex-row justify-center items-center gap-2 bg-white/10 py-4 rounded-2xl border border-white/20 active:scale-[0.97]"
-              disabled={false}
-              onPress={() => console.log("👍you press ios btn")}
+              disabled={loadingStrategy === "oauth_apple"}
+              onPress={() => handleSocialAuth("oauth_apple")}
             >
-              <Ionicons name="logo-apple" size={20} color="#FFFFFF" />
-              <Text className="text-foreground font-semibold text-sm">
-                Apple
-              </Text>
+              {loadingStrategy === "oauth_apple" ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <>
+                  <Ionicons name="logo-apple" size={20} color="#FFFFFF" />
+                  <Text className="text-foreground font-semibold text-sm">
+                    Apple
+                  </Text>
+                </>
+              )}
             </Pressable>
           </View>
         </View>
