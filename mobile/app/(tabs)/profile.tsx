@@ -9,7 +9,7 @@ const ProfileTab = () => {
       <ScrollView>
         <Text className="text-white text-lg">Profile Tab</Text>
         <Pressable onPress={() => signOut()} className="bg-red-600 px-4 py-2">
-          <Text className="text-white text-center font-semibold uppercase">
+          <Text className="text-white text-center font-bold uppercase">
             signout
           </Text>
         </Pressable>
